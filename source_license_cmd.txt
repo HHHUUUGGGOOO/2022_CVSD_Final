@@ -1,0 +1,7 @@
+(1) source all env : 
+   - source /usr/cad/cadence/cshrc 
+   - source /usr/spring_soft/CIC/ 
+   - source /usr/spring_soft/CIC/verdi.cshrc
+   - source /usr/cad/synopsys/CIC/synthesis.cshrc 
+(2) analyze power : 
+   - source /usr/cad/synopsys/CIC/primetime.cshrc 

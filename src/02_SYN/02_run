@@ -1,0 +1,1 @@
+dc_shell -f main.tcl
