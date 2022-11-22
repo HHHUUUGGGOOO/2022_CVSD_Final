@@ -146,21 +146,24 @@ initial begin
 end
 
 initial begin
-    while (~valid) begin
+    while (x < `TOTAL_PACK) begin
         @(negedge clk);
-    end
-    for (y = 0; y < pack_num; y = y + 1) begin
-        if (u_DEC_mem.mem_r[y] !== golden_mem[y]) begin
-            $display("Packet %02d#, decoded bit %02d = %035h != expect %35h", x, y, u_DEC_mem.mem_r[y], golden_mem[y]);
-            err = err + 1;
+        while (~valid) begin
+            @(negedge clk);
         end
-        else begin
-            $display("Packet %02d#, decoded bit %02d   ** Correct!! ** ", x, y);
-            pass = pass + 1;
+        for (y = 0; y < pack_num; y = y + 1) begin
+            if (u_DEC_mem.mem_r[y] !== golden_mem[y]) begin
+                $display("Packet %02d#, decoded bit %02d = %035h != expect %35h", x, y, u_DEC_mem.mem_r[y], golden_mem[y]);
+                err = err + 1;
+            end
+            else begin
+                $display("Packet %02d#, decoded bit %02d   ** Correct!! ** ", x, y);
+                pass = pass + 1;
+            end
         end
+        x = x + 1;
     end
-    x = x + 1;
-    if (x >= `TOTAL_PACK) over2 = 1;                                                                  
+    over2 = 1;                                                                  
 end
 
 always @(*)begin
