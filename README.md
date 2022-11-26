@@ -4,8 +4,9 @@ Polar Decoder
 # Useful Tutorial 
 - (1) **[Polar code introduction and basic example](https://www.zhihu.com/question/31656512)** (very easy-to-know by Hugo)
 - (2) **[SC decoder introduction and basic example (Successive Cancellation)](https://marshallcomm.cn/2017/03/13/polar-code-6-sc-decoder/)** (very easy-to-know after finishing the above tutorial) 
-- (3) **[Polar code introduction in detail](https://marshallcomm.cn/2017/03/01/polar-code-1-summary/)**
-- (4) **[信道分裂遞迴公式理解圖](https://blog.csdn.net/m0_52610504/article/details/117265594)**
+- (3) **[Polar code introduction in detail](https://marshallcomm.cn/2017/03/01/polar-code-1-summary/)** (Hugo 11/26)
+- (4) **[信道分裂遞迴公式理解圖](https://blog.csdn.net/m0_52610504/article/details/117265594)** (Hugo 11/26)
+- (5) **[信道合併, 信道分裂總結](https://www.cnblogs.com/Mr-Tiger/p/7496501.html)** (Hugo 11/26)
 
 # Paper Survey 
 - (1) **(Preliminary)** [A Brief Introduction to Polar Codes (2017)](http://pfister.ee.duke.edu/courses/ecen655/polar.pdf)
