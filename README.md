@@ -4,6 +4,7 @@ Polar Decoder
 # Useful Tutorial 
 - (1) **[Polar code introduction and basic example](https://www.zhihu.com/question/31656512)** (very easy-to-know by Hugo)
 - (2) **[SC decoder introduction and basic example (Successive Cancellation)](https://marshallcomm.cn/2017/03/13/polar-code-6-sc-decoder/)** (very easy-to-know after finishing the above tutorial) 
+- (3) **[Polar code introduction in detail](https://marshallcomm.cn/2017/03/01/polar-code-1-summary/)**
 
 # Paper Survey 
 - (1) **(Preliminary)** [A Brief Introduction to Polar Codes (2017)](http://pfister.ee.duke.edu/courses/ecen655/polar.pdf)
