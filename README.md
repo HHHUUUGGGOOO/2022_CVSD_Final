@@ -22,8 +22,8 @@ Polar Decoder
     - [Matlab version](https://github.com/YuYongRun/PolarCodes-Encoding-Decoding-Construction)
 
 # Hugo : SCL-related 
-    - [**(paper)** LLR-based Successive Cancellation List Decoder for Polar Codes with Multi-bit Decision](https://arxiv.org/pdf/1603.07055) **(TA-provided, help for hardware implementation)**
-    - [Intro & Example for SCL](https://marshallcomm.cn/2017/03/15/polar-code-7-scl-decoder/)
-    - [SCL improvement on hardware & CRC-SCL](https://kknews.cc/zh-tw/news/pke3mpj.html) 
-    - [**(Use This)**高吞吐量的併行化極化碼 CRC-SCL 譯碼器 (decoder) 的 FPGA 實現](https://www.opticsjournal.net/Articles/OJ53898d449a8aa760/FullText)
+    - **[(paper) LLR-based Successive Cancellation List Decoder for Polar Codes with Multi-bit Decision](https://arxiv.org/pdf/1603.07055)**(TA-provided, help for hardware implementation)
+    - **[Intro & Example for SCL](https://marshallcomm.cn/2017/03/15/polar-code-7-scl-decoder/)**
+    - **[SCL improvement on hardware & CRC-SCL](https://kknews.cc/zh-tw/news/pke3mpj.html)**
+    - **[高吞吐量的併行化極化碼 CRC-SCL 譯碼器 (decoder) 的 FPGA 實現](https://www.opticsjournal.net/Articles/OJ53898d449a8aa760/FullText)** **(Use this)**
 
