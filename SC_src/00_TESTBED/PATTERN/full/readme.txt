@@ -1,0 +1,37 @@
+Please fulfill the full pattern
+name the file name with full_XX.mem, full_XX_golden.mem
+ex: 
+full_0.mem
+full_1.mem
+full_2.mem
+full_3.mem
+full_4.mem
+full_5.mem
+full_6.mem
+full_7.mem
+full_8.mem
+full_9.mem
+full_10.mem
+full_11.mem
+full_12.mem
+full_13.mem
+full_14.mem
+full_15.mem
+full_16.mem
+full_0_golden.mem
+full_1_golden.mem
+full_2_golden.mem
+full_3_golden.mem
+full_4_golden.mem
+full_5_golden.mem
+full_6_golden.mem
+full_7_golden.mem
+full_8_golden.mem
+full_9_golden.mem
+full_10_golden.mem
+full_11_golden.mem
+full_12_golden.mem
+full_13_golden.mem
+full_14_golden.mem
+full_15_golden.mem
+full_16_golden.mem
