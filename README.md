@@ -24,9 +24,9 @@ Polar Decoder
 # Hugo : SCL-related 
 - (1) **[(paper) LLR-based Successive Cancellation List Decoder for Polar Codes with Multi-bit Decision](https://arxiv.org/pdf/1603.07055)** (TA-provided, help for hardware implementation)
 - (2) **[高吞吐量的併行化極化碼 CRC-SCL 譯碼器 (decoder) 的 FPGA 實現](https://www.opticsjournal.net/Articles/OJ53898d449a8aa760/FullText)** **(Use this)**
-    - [IEEE paper, 用估計值再度簡化 f, g 函數的乘除過程 (大幅降低面積和計算時間)](https://ieeexplore.ieee.org/document/6327689) 
     - [Intro & Example for SCL (知乎)](https://marshallcomm.cn/2017/03/15/polar-code-7-scl-decoder/)
-    - [基於 FPGA 的 SCL 解碼算法優化與設計](https://kknews.cc/zh-tw/news/pke3mpj.html)
-    - [CRC-SCL polar decoder](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6297420) 
+    - [IEEE paper, 用估計值再度簡化 f, g 函數的乘除過程 (大幅降低面積和計算時間)](https://ieeexplore.ieee.org/document/6327689) **(main)**
+    - [基於 FPGA 的 SCL 解碼算法優化與設計](https://kknews.cc/zh-tw/news/pke3mpj.html) **(main)**
+    - [CRC-SCL polar decoder](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6297420) **(main)**
         - **CRC check 似乎都要套在整套流程, i.e. 他要 pre-processing before encoding, 所以先刻 SCL 就好, 再看什麼方法可以降低 error-rate**
 
