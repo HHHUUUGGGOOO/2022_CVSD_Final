@@ -27,4 +27,6 @@ Polar Decoder
     - [IEEE paper, 用估計值再度簡化 f, g 函數的乘除過程](https://ieeexplore.ieee.org/document/6327689) 
     - [Intro & Example for SCL (知乎)](https://marshallcomm.cn/2017/03/15/polar-code-7-scl-decoder/)
     - [基於 FPGA 的 SCL 解碼算法優化與設計](https://kknews.cc/zh-tw/news/pke3mpj.html)
+    - [2021 BP 改進演算法 (一開始想參考的)](https://ietresearch.onlinelibrary.wiley.com/doi/epdf/10.1049/cmu2.12148) 
+        - **因為 CRC 必須加在整體流程, 預處理在 encode 之前, 所以在這不可行, 因此我想稍微改進 SCL, 最後得到路徑度量最小的 L 條不是輸出 PM 最小那條, 而是從 PM 最小值開始, check "x' = u' * G", 一開始的 LLR 轉為 encoded x', 是否等於解碼值乘以生成矩陣, 若是, 直接輸出, 若否, 仍然輸出 PM 最小值**
 
