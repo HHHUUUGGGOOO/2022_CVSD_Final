@@ -1,1 +1,0 @@
-ncverilog -f rtl.f +define+BASE  +access+rw -quiet

@@ -1,1 +1,0 @@
-ncverilog -f rtl.f +define+BASE +define+POST +define+SDF +access+rw +ncmaxdelays -quiet
