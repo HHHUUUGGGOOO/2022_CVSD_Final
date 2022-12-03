@@ -29,4 +29,6 @@ Polar Decoder
     - [基於 FPGA 的 SCL 解碼算法優化與設計](https://kknews.cc/zh-tw/news/pke3mpj.html) **(main)**
     - [CRC-SCL polar decoder](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6297420) **(main)**
         - **CRC check 似乎都要套在整套流程, i.e. 他要 pre-processing before encoding, 所以先刻 SCL 就好, 再看什麼方法可以降低 error-rate**
+- (3) **[(SCL Algorithm) List Decoding of Polar Codes](https://arxiv.org/abs/1206.0050)**
+    - [Github code in C](https://github.com/tavildar/Polar)
 
