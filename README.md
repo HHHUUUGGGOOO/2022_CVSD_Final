@@ -32,4 +32,5 @@ Polar Decoder
         - **CRC check 似乎都要套在整套流程, i.e. 他要 pre-processing before encoding, 所以先刻 SCL 就好, 再看什麼方法可以降低 error-rate**
 - (3) **[(SCL Algorithm) List Decoding of Polar Codes](https://arxiv.org/abs/1206.0050)**
     - [Github code in C](https://github.com/tavildar/Polar)
+    - [(SCL Algorithm) Decoding Implementation Paper](https://web.eecs.umich.edu/~zhengya/papers/tao_jssc21.pdf)
 
