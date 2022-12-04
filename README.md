@@ -8,6 +8,7 @@ Polar Decoder
 - (4) **[信道分裂遞迴公式理解圖](https://blog.csdn.net/m0_52610504/article/details/117265594)** (Hugo 11/26)
 - (5) **[信道合併, 信道分裂總結](https://www.cnblogs.com/Mr-Tiger/p/7496501.html)** (Hugo 11/26)
 - (6) **[中山大學博士論文: SC Decoder 半平行化架構設計優化](http://140.117.121.23/ETD-db/ETD-search/getfile?URN=etd-0016117-154531&filename=etd-0016117-154531.pdf)**
+- (7) **[2022 SC Decoder Implementation](https://www.researchgate.net/publication/51956764_Hardware_Implementation_of_Successive_Cancellation_Decoders_for_PolarCodes)**
 
 # Paper Survey 
 - (1) **(Preliminary)** [A Brief Introduction to Polar Codes (2017)](http://pfister.ee.duke.edu/courses/ecen655/polar.pdf)
