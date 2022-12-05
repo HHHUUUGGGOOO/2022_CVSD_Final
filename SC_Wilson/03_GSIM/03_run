@@ -1,0 +1,1 @@
+ncverilog -f rtl.f +define+BASE +define+GSIM +define+SDF +access+rw +ncmaxdelays -quiet
