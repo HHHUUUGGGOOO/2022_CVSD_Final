@@ -10,6 +10,7 @@ Polar Decoder
 - (6) **[中山大學博士論文: SC Decoder 半平行化架構設計優化](http://140.117.121.23/ETD-db/ETD-search/getfile?URN=etd-0016117-154531&filename=etd-0016117-154531.pdf)**
 - (7) **[2022 SC Decoder Implementation](https://www.researchgate.net/publication/51956764_Hardware_Implementation_of_Successive_Cancellation_Decoders_for_PolarCodes)** 
 - (8) **[Function vs. Task](https://ithelp.ithome.com.tw/articles/10271641?sc=iThelpR)**
+- (9) **[Verilog generate-for 用法](https://blog.51cto.com/u_15262460/3276239)**
 
 # Paper Survey 
 - (1) **(Preliminary)** [A Brief Introduction to Polar Codes (2017)](http://pfister.ee.duke.edu/courses/ecen655/polar.pdf)
