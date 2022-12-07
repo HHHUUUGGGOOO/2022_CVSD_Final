@@ -36,4 +36,6 @@ Polar Decoder
 - (3) **[(SCL Algorithm) List Decoding of Polar Codes](https://arxiv.org/abs/1206.0050)**
     - [Github code in C](https://github.com/tavildar/Polar)
     - [(SCL Algorithm) Decoding Implementation Paper](https://web.eecs.umich.edu/~zhengya/papers/tao_jssc21.pdf)
+- (4) **[SC 優化可參考 paper]**
+    - [A Low-Latency SC Polar Decoder Based on the Sequential Logic Optimization](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8491226)
 
