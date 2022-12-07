@@ -15,4 +15,5 @@
 // design files
 // -----------------------------------------------------------------------------
 ./polar_decoder.v
-./reliability_index.v
+./reliability_LUT.v
+./p_node.v 

@@ -155,7 +155,7 @@ module polar_decoder (
                 end 
             end 
             DECODE_128: begin 
-
+                
             end 
             DECODE_256: begin 
 
