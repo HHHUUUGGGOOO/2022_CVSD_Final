@@ -51,7 +51,7 @@ module polar_decoder (
 	// ---- Add your own wires and registers here if needed ---- //
     // LLR memory   
     reg [10:0] raddr_r, raddr_w;
-    reg [11:0] llr_data [0:511]; 
+    reg signed [11:0] llr_data [0:511]; 
     integer i; 
 
     // DEC memory  
