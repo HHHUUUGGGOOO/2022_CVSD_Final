@@ -17,3 +17,4 @@
 ./polar_decoder.v
 ./reliability_LUT.v
 ./p_node.v 
+./PE.v

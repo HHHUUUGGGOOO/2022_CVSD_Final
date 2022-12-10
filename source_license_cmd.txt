@@ -5,3 +5,5 @@
    - source /usr/cad/synopsys/CIC/synthesis.cshrc 
 (2) analyze power : 
    - source /usr/cad/synopsys/CIC/primetime.cshrc 
+
+* If "permission denied", type "chmod 744 01_run" for example
