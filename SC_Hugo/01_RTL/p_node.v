@@ -1,8 +1,8 @@
 module p_node(
     input signed [12:0] LLR_1, // to avoid overflow, add extra bit
     input signed [12:0] LLR_2, 
-    input        frozen_1; 
-    input        frozen_2;   
+    input        frozen_1, 
+    input        frozen_2,   
     output       u_hat_1,   // estimated u(2i-1) 
     output       u_hat_2    // estimated u(2i)
 ); 

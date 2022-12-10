@@ -103,8 +103,8 @@ module polar_decoder (
     wire [8:0] reliability_f, reliability_g; 
     wire       isfrozen_f, isfrozen_g;
 
-    reliability_LUT lut_f(.N_channel(N_num[9:8]), .channel_index({stage_cnt_r, 1'b0}), reliability_index(reliability_f));
-    reliability_LUT lut_g(.N_channel(N_num[9:8]), .channel_index({stage_cnt_r, 1'b1}), reliability_index(reliability_g));
+    reliability_LUT lut_f(.N_channel(N_num[9:8]), .channel_index({stage_cnt_r, 1'b0}), .reliability_index(reliability_f));
+    reliability_LUT lut_g(.N_channel(N_num[9:8]), .channel_index({stage_cnt_r, 1'b1}), .reliability_index(reliability_g));
 
     assign isfrozen_f = (reliability_f < (N_num - K_num));
     assign isfrozen_g = (reliability_g < (N_num - K_num));
@@ -192,8 +192,7 @@ module polar_decoder (
         case (state_r) 
             IDLE: begin 
                 if (module_en) begin 
-                    // reset 
-                    proc_done_w = 1'b0; 
+                    // reset  
                     N_num = 0; 
                     K_num = 0; 
                     total_pack_num = 0; 
@@ -290,7 +289,7 @@ module polar_decoder (
                             f_b[i] = stage_value_8[i+128]; 
                             g_a[i] = stage_value_8[i]; 
                             g_b[i] = stage_value_8[i+128]; 
-                            g_usum[i] = u_s7[{stage_cnt_r[8], 1'b0, i[6:0]}];
+                            g_usum[i] = u_s7[{stage_cnt_r[7], 1'b0, i[6:0]}];
                         end 
                     end 
                     else if (stage_now_r == 6) begin // N = 128 channel, total input = 128
@@ -299,7 +298,7 @@ module polar_decoder (
                             f_b[i] = stage_value_7[i+64]; 
                             g_a[i] = stage_value_7[i]; 
                             g_b[i] = stage_value_7[i+64];
-                            g_usum[i] = u_s6[{stage_cnt_r[8:7], 1'b0, i[5:0]}];
+                            g_usum[i] = u_s6[{stage_cnt_r[7:6], 1'b0, i[5:0]}];
                         end
                     end
                     else if (stage_now_r == 5) begin // N = 64 channel, total input = 64
@@ -308,7 +307,7 @@ module polar_decoder (
                             f_b[i] = stage_value_6[i+32]; 
                             g_a[i] = stage_value_6[i]; 
                             g_b[i] = stage_value_6[i+32];
-                            g_usum[i] = u_s5[{stage_cnt_r[8:6], 1'b0, i[4:0]}];
+                            g_usum[i] = u_s5[{stage_cnt_r[7:5], 1'b0, i[4:0]}];
                         end
                     end
                     else if (stage_now_r == 4) begin // N = 32 channel, total input = 32
@@ -317,7 +316,7 @@ module polar_decoder (
                             f_b[i] = stage_value_5[i+16]; 
                             g_a[i] = stage_value_5[i]; 
                             g_b[i] = stage_value_5[i+16];
-                            g_usum[i] = u_s4[{stage_cnt_r[8:5], 1'b0, i[3:0]}];
+                            g_usum[i] = u_s4[{stage_cnt_r[7:4], 1'b0, i[3:0]}];
                         end
                     end
                     else if (stage_now_r == 3) begin // N = 16 channel, total input = 16
@@ -326,7 +325,7 @@ module polar_decoder (
                             f_b[i] = stage_value_4[i+8];
                             g_a[i] = stage_value_4[i]; 
                             g_b[i] = stage_value_4[i+8]; 
-                            g_usum[i] = u_s3[{stage_cnt_r[8:4], 1'b0, i[2:0]}];
+                            g_usum[i] = u_s3[{stage_cnt_r[7:3], 1'b0, i[2:0]}];
                         end
                     end
                     else if (stage_now_r == 2) begin // N = 8 channel, total input = 8
@@ -335,7 +334,7 @@ module polar_decoder (
                             f_b[i] = stage_value_3[i+4]; 
                             g_a[i] = stage_value_3[i]; 
                             g_b[i] = stage_value_3[i+4];
-                            g_usum[i] = u_s2[{stage_cnt_r[8:3], 1'b0, i[1:0]}];
+                            g_usum[i] = u_s2[{stage_cnt_r[7:2], 1'b0, i[1:0]}];
                         end
                     end
                     else if (stage_now_r == 1) begin // N = 4 channel, total input = 4
@@ -344,7 +343,7 @@ module polar_decoder (
                             f_b[i] = stage_value_2[i+2]; 
                             g_a[i] = stage_value_2[i]; 
                             g_b[i] = stage_value_2[i+2];
-                            g_usum[i] = u_s1[{stage_cnt_r[8:2], 1'b0, i[0]}];
+                            g_usum[i] = u_s1[{stage_cnt_r[7:1], 1'b0, i[0]}];
                         end
                     end
                     else begin // stage_now_r == 0, p_node 
@@ -355,7 +354,7 @@ module polar_decoder (
                             f_b[i] = stage_value_1[i+1]; 
                             g_a[i] = stage_value_1[i]; 
                             g_b[i] = stage_value_1[i+1];
-                            g_usum[i] = u_s0[{stage_cnt_r[8:1], 1'b0}];
+                            g_usum[i] = u_s0[{stage_cnt_r[7:0], 1'b0}];
                         end
                     end
                 end  
@@ -458,7 +457,8 @@ module polar_decoder (
             // DEC_memory 
             waddr_r <= (cur_pack_r - 1);
             // load #packet & N, K 
-            if (state_r == READ_PACK) total_pack_num <= rdata[6:0];
+            if (state_r == IDLE) proc_done_r <= 1'b0; 
+            else if (state_r == READ_PACK) total_pack_num <= rdata[6:0];
             else if (state_r == READ_N_K) begin 
                 if (cur_line_r == 0) begin 
                     N_num <= rdata[9:0]; 
