@@ -30,8 +30,9 @@ module polar_decoder (
     reg [6:0] total_pack_num; // u6.0 
     reg [7:0] K_num; // u7.0
     reg [9:0] N_num; // u9.0
+    reg       read_ready_r, read_ready_w; // for cur_line_r, to add a buffer for LLR_memory 
     reg [6:0] cur_pack_r, cur_pack_w;
-    reg [5:0] cur_line_r, cur_line_w; // start from each packet's line 2 (LLR begin)
+    reg [4:0] cur_line_r, cur_line_w; // start from each packet's line 2 (LLR begin)
                                       // current LLR addr = 1 + ((cur_pack_r-1) * 33) + (cur_line_r)
                                       // e.g. packet no.2, line 3 = 1 + (1*33) + 1 = LLR_mem[36]
     reg [3:0] stage_now_r, stage_now_w; // stage 0 --> stage 8 (left --> right), I am in which stage now 
@@ -147,6 +148,7 @@ module polar_decoder (
         // LLR_memory 
         raddr_w = raddr_r; 
         // counter  
+        read_ready_w = read_ready_r; 
         cur_pack_w = cur_pack_r; 
         cur_line_w = cur_line_r;
         stage_now_w = stage_now_r; 
@@ -215,12 +217,20 @@ module polar_decoder (
             READ_N_K: begin 
                 // for each packet, the "cur_line_w" reset  
                 raddr_w = raddr_r + 1;
-                cur_line_w = 1; 
-                cur_pack_w = (cur_line_r == 1) ? (cur_pack_r + 1) : cur_pack_r;
-                // read the first line of packet to get N, K 
-                // N, K are read @ sequential always 
-                // state 
-                state_w = (cur_line_r == 1) ? READ_LLR : READ_N_K;  
+                cur_line_w = 0; 
+                read_ready_w = 1'b1; 
+                if (read_ready_r == 1'b1) begin 
+                    read_ready_w = 1'b0; 
+                    cur_pack_w = cur_pack_r + 1;
+                    // read the first line of packet to get N, K 
+                    // N, K are read @ sequential always 
+                    // state 
+                    state_w = READ_LLR;
+                end 
+                else begin 
+                    cur_pack_w = cur_pack_r;
+                    state_w = READ_N_K;
+                end   
             end
             READ_LLR: begin 
                 // N = 128, 256, 512
@@ -228,22 +238,22 @@ module polar_decoder (
                 //   - LLR_mem address (raddr_w)
                 //   - next state (state_w)
                 if (N_num == 128) begin 
-                    cur_line_w = (cur_line_r == 8) ? 0 : (cur_line_r + 1); // 16 (LLR) * 8 = 128
-                    raddr_w = (cur_line_r == 8) ? (raddr_r + (32-8)) : (raddr_r + 1); // fulfill 33 lines in a packet 
+                    cur_line_w = (cur_line_r == 7) ? 0 : (cur_line_r + 1); // 16 (LLR) * 8 = 128
+                    raddr_w = (cur_line_r == 7) ? (raddr_r + (32-8)) : (raddr_r + 1); // fulfill 33 lines in a packet 
                     stage_now_w = 6; // start from rightmost stage
-                    state_w = (cur_line_r == 8) ? DECODE : READ_LLR; // state
+                    state_w = (cur_line_r == 7) ? DECODE : READ_LLR; // state
                 end 
                 else if (N_num == 256) begin 
-                    cur_line_w = (cur_line_r == 16) ? 0 : (cur_line_r + 1); // 16 (LLR) * 16 = 256
-                    raddr_w = (cur_line_r == 16) ? (raddr_r + (32-16)) : (raddr_r + 1); // fulfill 33 lines in a packet
+                    cur_line_w = (cur_line_r == 15) ? 0 : (cur_line_r + 1); // 16 (LLR) * 16 = 256
+                    raddr_w = (cur_line_r == 15) ? (raddr_r + (32-16)) : (raddr_r + 1); // fulfill 33 lines in a packet
                     stage_now_w = 7; // start from rightmost stage
-                    state_w = (cur_line_r == 16) ? DECODE : READ_LLR; // state
+                    state_w = (cur_line_r == 15) ? DECODE : READ_LLR; // state
                 end 
                 else begin  
-                    cur_line_w = (cur_line_r == 32) ? 0 : (cur_line_r + 1); // 16 (LLR) * 32 = 512
-                    raddr_w = (cur_line_r == 32) ? (raddr_r + (32-32)) : (raddr_r + 1); // fulfill 33 lines in a packet
+                    cur_line_w = (cur_line_r == 31) ? 0 : (cur_line_r + 1); // 16 (LLR) * 32 = 512
+                    raddr_w = (cur_line_r == 31) ? (raddr_r + (32-32)) : (raddr_r + 1); // fulfill 33 lines in a packet
                     stage_now_w = 8; // start from rightmost stage
-                    state_w = (cur_line_r == 32) ? DECODE : READ_LLR; // state
+                    state_w = (cur_line_r == 31) ? DECODE : READ_LLR; // state
                 end 
             end 
             DECODE: begin 
@@ -251,10 +261,13 @@ module polar_decoder (
                 if (stage_count_down_done_r == 1'b1) begin 
                     stage_count_down_done_w = 1'b0;  
                     stage_cnt_w = stage_cnt_r + 1; 
+                    // done 
                     if ((N_num == 128) && (stage_cnt_r == 6'b111111)) state_w = PROC_DONE; 
                     else if ((N_num == 256) && (stage_cnt_r == 7'b1111111)) state_w = PROC_DONE;
                     else if ((N_num == 512) && (stage_cnt_r == 8'b11111111)) state_w = PROC_DONE;
-                    else if (stage_cnt_w[7] == ~stage_cnt_r[7]) stage_now_w = 7; 
+                    else state_w = state_r; 
+                    // stage flow 
+                    if (stage_cnt_w[7] == ~stage_cnt_r[7]) stage_now_w = 7; 
                     else if (stage_cnt_w[6] == ~stage_cnt_r[6]) stage_now_w = 6; 
                     else if (stage_cnt_w[5] == ~stage_cnt_r[5]) stage_now_w = 5;
                     else if (stage_cnt_w[4] == ~stage_cnt_r[4]) stage_now_w = 4;
@@ -267,8 +280,9 @@ module polar_decoder (
                 else begin 
                     // current stage 
                     if (stage_now_r != 0) stage_now_w = stage_now_r - 1; 
+                    else stage_now_w = stage_now_r; 
                     // stage case (stage 8 to stage 0, right to left) --> update f, g value in each stage's register 
-                    else if (stage_now_r == 8) begin 
+                    if (stage_now_r == 8) begin 
                         for (i = 0 ; i < 256 ; i = i + 1) begin // f, g input are the same (see N = 8 figure)
                             f_a[i] = llr_data[i]; 
                             f_b[i] = llr_data[i+256]; 
@@ -286,13 +300,17 @@ module polar_decoder (
                             g_usum[i] = u_s7[{stage_cnt_r[7], 1'b0, i[6:0]}];
                         end 
                     end 
-                    else if (stage_now_r == 6) begin // N = 128 channel, total input = 128
+                    else if (stage_now_r == 6) begin // N = 128 channel, total input = 128 
+                        $display("(4) Example for N = 128, in \"stage_now_r\" == 6"); 
                         for (i = 0 ; i < 64 ; i = i + 1) begin 
                             f_a[i] = stage_value_7[i]; 
+                            $display("(4) f_a[i] (stage_value_7[i]) = %b", stage_value_7[i]); 
                             f_b[i] = stage_value_7[i+64]; 
+                            $display("(4) f_b[i] (stage_value_7[i]) = %b", stage_value_7[i+64]);
                             g_a[i] = stage_value_7[i]; 
                             g_b[i] = stage_value_7[i+64];
                             g_usum[i] = u_s6[{stage_cnt_r[7:6], 1'b0, i[5:0]}];
+                            $display("(4) u_s6 = %b", u_s6[{stage_cnt_r[7:6], 1'b0, i[5:0]}]); 
                         end
                     end
                     else if (stage_now_r == 5) begin // N = 64 channel, total input = 64
@@ -400,6 +418,7 @@ module polar_decoder (
             total_pack_num <= 0;  
             K_num <= 0; 
             N_num <= 0; 
+            read_ready_r <= 0; 
             cur_pack_r <= 0;
             cur_line_r <= 0;
             stage_now_r <= 0; 
@@ -446,6 +465,8 @@ module polar_decoder (
         else begin  
             // state 
             state_r <= state_w; 
+            // counter 
+            read_ready_r <= read_ready_w; 
             // LLR_memory  
             raddr_r <= raddr_w; 
             // DEC_memory 
@@ -459,7 +480,7 @@ module polar_decoder (
                 $display("(1) total pack num = %d", rdata[6:0]); 
             end 
             else if (state_r == READ_N_K) begin 
-                if (cur_line_r == 1) begin 
+                if (read_ready_r) begin 
                     N_num <= rdata[9:0]; 
                     K_num <= rdata[17:10]; 
                     $display("=================================="); 
@@ -494,6 +515,11 @@ module polar_decoder (
                         // only has 8 lines 
                         if (cur_line_r == (i >> 4)) begin 
                             stage_value_7[i] <= $signed(rdata[(12*i[3:0])+:12]);
+                            // $display("(3.5) i = %d", i); 
+                            // $display("(3.5) i >> 4 = %d", (i >> 4));
+                            // $display("(3.5) cur_line_r = %d", cur_line_r); 
+                            // $display("(3.5) stage_value_7[i] = %b", $signed(rdata[(12*i[3:0])+:12])); 
+                            // $display("----------------------------------");
                         end 
                         else stage_value_7[i] <= stage_value_7[i]; 
                     end 
@@ -514,7 +540,7 @@ module polar_decoder (
                 dec_k_idx <= 0; 
                 if (cur_pack_r == total_pack_num) proc_done_r <= 1'b1;
             end 
-            else if (state_r == DECODE) begin 
+            else if (state_r == DECODE) begin  
                 if (stage_now_r == 8) begin 
                     for (i = 0 ; i < 256 ; i = i + 1) begin // f() part or g() part
                         stage_value_8[i] <= (stage_cnt_r[7]) ? g_out[i] : f_out[i]; 
