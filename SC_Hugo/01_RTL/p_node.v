@@ -1,10 +1,8 @@
 module p_node(
-    input [11:0] LLR_1, 
-    input [11:0] LLR_2, 
-    input [9:0]  N,         // to check if frozen (#channel, N = 128, 256, 512)
-    input [7:0]  K,         
-    input [8:0]  ch_idx_1,  // to check if frozen (channel index) 
-    input [8:0]  ch_idx_2,  
+    input signed [12:0] LLR_1, // to avoid overflow, add extra bit
+    input signed [12:0] LLR_2, 
+    input        frozen_1; 
+    input        frozen_2;   
     output       u_hat_1,   // estimated u(2i-1) 
     output       u_hat_2    // estimated u(2i)
 ); 
@@ -25,24 +23,16 @@ module p_node(
     wire [8:0]  rindex_1, rindex_2; // reliability index  
     // special wire from input (boolean)
     wire sign_LLR_1; 
-    wire sign_LLR_2; 
-    wire frozen_1; // frozen = (reliability_index < (N-K))
-    wire frozen_2; 
+    wire sign_LLR_2;  
     wire comp; 
 
     // assign special input 
-    assign sign_LLR_1 = (LLR_1[11] == 1'b0) ? 0 : 1; 
-    assign sign_LLR_2 = (LLR_2[11] == 1'b0) ? 0 : 1; 
-    assign frozen_1   = rindex_1 < (N - K); 
-    assign frozen_2   = rindex_2 < (N - K); 
-    assign comp       = ((LLR_1[11] == 1'b0) && (LLR_2[11] == 1'b0)) ? (LLR_1 >= LLR_2) :               // LLR_1 positive, LLR_2 positive
-                        ((LLR_1[11] == 1'b0) && (LLR_2[11] == 1'b1)) ? (LLR_1 >= (~LLR_2 + 1'b1)) :     // LLR_1 positive, LLR_2 negative
-                        ((LLR_1[11] == 1'b1) && (LLR_2[11] == 1'b0)) ? ((~LLR_1 + 1'b1) >= LLR_2) : ((~LLR_1 + 1'b1) >= (~LLR_2 + 1'b1));  // LLR_1 negative, LLR_2 positive 
+    assign sign_LLR_1 = (LLR_1[12] == 1'b0) ? 0 : 1; 
+    assign sign_LLR_2 = (LLR_2[12] == 1'b0) ? 0 : 1; 
+    assign comp       = ((LLR_1[12] == 1'b0) && (LLR_2[12] == 1'b0)) ? (LLR_1 >= LLR_2) :               // LLR_1 positive, LLR_2 positive
+                        ((LLR_1[12] == 1'b0) && (LLR_2[12] == 1'b1)) ? (LLR_1 >= (~LLR_2 + 1'b1)) :     // LLR_1 positive, LLR_2 negative
+                        ((LLR_1[12] == 1'b1) && (LLR_2[12] == 1'b0)) ? ((~LLR_1 + 1'b1) >= LLR_2) : ((~LLR_1 + 1'b1) >= (~LLR_2 + 1'b1));  // LLR_1 negative, LLR_2 positive 
                                                                                                                                            // LLR_1 negative, LLR_2 negative
-
-    // call module 
-    reliability_LUT lut_1(.N_channel(N[9:8]), .channel_index(ch_idx_1), .reliability_index(rindex_1)); 
-    reliability_LUT lut_2(.N_channel(N[9:8]), .channel_index(ch_idx_2), .reliability_index(rindex_2));
 
     // logic circuit (order: g1 --> g14)
     assign temp[2]  = ~frozen_2; 
