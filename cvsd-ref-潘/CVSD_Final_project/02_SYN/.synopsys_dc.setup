@@ -7,7 +7,7 @@
 set company {NTUGIEE}
 set designer {Student}
 
-# set search_path      ". /home/raid7_2/course/cvsd/CBDK_IC_Contest/CIC/SynopsysDC/db  $search_path"
+set search_path      ". /home/raid7_2/course/cvsd/CBDK_IC_Contest/CIC/SynopsysDC/db  $search_path"
 set search_path      "/usr/cad/designkit/digital/T13/CBDK_IC_Contest_v2.5/SynopsysDC/db $search_path"
 set target_library   "slow.db                     \
 					  typical.db
