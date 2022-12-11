@@ -1,6 +1,6 @@
 module p_node(
-    input signed [12:0] LLR_1, // to avoid overflow, add extra bit
-    input signed [12:0] LLR_2, 
+    input signed [16:0] LLR_1, // to avoid overflow, add extra bit
+    input signed [16:0] LLR_2, 
     input        frozen_1, 
     input        frozen_2,   
     output       u_hat_1,   // estimated u(2i-1) 
@@ -19,19 +19,18 @@ module p_node(
     // =================================================================
 
     // temp wire 
-    wire [11:0] temp; 
-    wire [8:0]  rindex_1, rindex_2; // reliability index  
+    wire [11:0] temp;  
     // special wire from input (boolean)
     wire sign_LLR_1; 
     wire sign_LLR_2;  
     wire comp; 
 
     // assign special input 
-    assign sign_LLR_1 = (LLR_1[12] == 1'b0) ? 0 : 1; 
-    assign sign_LLR_2 = (LLR_2[12] == 1'b0) ? 0 : 1; 
-    assign comp       = ((LLR_1[12] == 1'b0) && (LLR_2[12] == 1'b0)) ? (LLR_1 >= LLR_2) :               // LLR_1 positive, LLR_2 positive
-                        ((LLR_1[12] == 1'b0) && (LLR_2[12] == 1'b1)) ? (LLR_1 >= (~LLR_2 + 1'b1)) :     // LLR_1 positive, LLR_2 negative
-                        ((LLR_1[12] == 1'b1) && (LLR_2[12] == 1'b0)) ? ((~LLR_1 + 1'b1) >= LLR_2) : ((~LLR_1 + 1'b1) >= (~LLR_2 + 1'b1));  // LLR_1 negative, LLR_2 positive 
+    assign sign_LLR_1 = (LLR_1[16] == 1'b0) ? 0 : 1; 
+    assign sign_LLR_2 = (LLR_2[16] == 1'b0) ? 0 : 1; 
+    assign comp       = ((LLR_1[16] == 1'b0) && (LLR_2[16] == 1'b0)) ? (LLR_1 >= LLR_2) :               // LLR_1 positive, LLR_2 positive
+                        ((LLR_1[16] == 1'b0) && (LLR_2[16] == 1'b1)) ? (LLR_1 >= (~LLR_2 + 1'b1)) :     // LLR_1 positive, LLR_2 negative
+                        ((LLR_1[16] == 1'b1) && (LLR_2[16] == 1'b0)) ? ((~LLR_1 + 1'b1) >= LLR_2) : ((~LLR_1 + 1'b1) >= (~LLR_2 + 1'b1));  // LLR_1 negative, LLR_2 positive 
                                                                                                                                            // LLR_1 negative, LLR_2 negative
 
     // logic circuit (order: g1 --> g14)
