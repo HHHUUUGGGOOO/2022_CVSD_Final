@@ -38,6 +38,7 @@ parameter S_ReadNK = 2;     // state to read N and K
 parameter S_ReadLLR = 3;    // state to read LLR data
 parameter S_Decode = 4;     // state to Decode
 parameter S_Write = 5;      // state to Write decoded message to DecMem 
+parameter S_Finish = 6;     // state finish 1 pattern
 
 // ---------------------------------------------------------------------------
 // Wires and Registers
@@ -191,8 +192,13 @@ always @(*) begin
             end
         end
         S_Packet: begin
-            packet_num_w = rdata[6:0];
-            next_state = S_ReadNK;
+            if (module_en) begin     
+                packet_num_w = rdata[6:0];  
+                next_state = S_ReadNK;
+            end
+            else begin
+                next_state = S_Packet;
+            end
         end
         S_ReadNK: begin
             next_state = S_ReadLLR;
@@ -213,9 +219,12 @@ always @(*) begin
             packet_num_w = (decode_done == 1) ? packet_num_r - 1 : packet_num_r;
         end
         S_Write: begin
-            next_state = (packet_num_r == 0) ? S_Packet : S_ReadNK;
             proc_done_w = (packet_num_r == 0) ? 1 : 0;
-            waddr_w = waddr_r + 1;
+            next_state = (packet_num_r == 0) ? S_Finish : S_ReadNK;
+            waddr_w = (packet_num_r == 0) ? 0 : waddr_r + 1;
+        end
+        S_Finish : begin
+            next_state = S_Idle;
         end
         default: begin
             next_state = S_Idle;
@@ -617,6 +626,7 @@ end
 // output count
 always @(*) begin
     if (state == S_Decode) begin
+        wdata_w = wdata_r;
         if (stage_r == 0) begin
             if (isFrozen1 == 1 && isFrozen2 == 1) begin
                 output_count_w = output_count_r;
@@ -714,7 +724,7 @@ always @(posedge clk or negedge rst_n) begin
                 raddr_reg <= (module_en == 1) ? raddr_reg + 1 : raddr_reg;
             end
             S_Packet: begin
-                raddr_reg <= raddr_reg + 1;
+                raddr_reg <= (module_en == 1) ? raddr_reg + 1 : raddr_reg;
             end
             S_ReadNK: begin
                 raddr_reg <= raddr_reg + 1;
@@ -731,7 +741,10 @@ always @(posedge clk or negedge rst_n) begin
                 end
             end
             S_Write: begin
-                raddr_reg <= raddr_reg + 1;
+                raddr_reg <= (packet_num_r == 0) ? 0 : raddr_reg + 1;
+            end
+            S_Finish: begin
+                raddr_reg <= raddr_reg;
             end
             default: begin
                 raddr_reg <= raddr_reg;
@@ -778,13 +791,27 @@ always @(posedge clk or negedge rst_n) begin
         output_count_r <= 0;
         for (a=0; a<256; a=a+1) begin
             stage_8_out_r[a] <= 0;
-            stage_7_out_r[a[6:0]] <= 0;
-            stage_6_out_r[a[5:0]] <= 0;
-            stage_5_out_r[a[4:0]] <= 0;
-            stage_4_out_r[a[3:0]] <= 0;
-            stage_3_out_r[a[2:0]] <= 0;
-            stage_2_out_r[a[1:0]] <= 0;
-            stage_1_out_r[a[0]] <= 0;
+        end
+        for (a=0; a<128; a=a+1) begin
+            stage_7_out_r[a] <= 0;
+        end
+        for (a=0; a<64; a=a+1) begin
+            stage_6_out_r[a] <= 0;
+        end
+        for (a=0; a<32; a=a+1) begin
+            stage_5_out_r[a] <= 0;
+        end
+        for (a=0; a<16; a=a+1) begin
+            stage_4_out_r[a] <= 0;
+        end
+        for (a=0; a<8; a=a+1) begin
+            stage_3_out_r[a] <= 0;
+        end
+        for (a=0; a<4; a=a+1) begin
+            stage_2_out_r[a] <= 0;
+        end
+        for (a=0; a<2; a=a+1) begin
+            stage_1_out_r[a] <= 0;
         end
         stage_8_flag_r <= 0;
         stage_7_flag_r <= 0;
@@ -810,13 +837,27 @@ always @(posedge clk or negedge rst_n) begin
         output_count_r <= output_count_w;
         for (a=0; a<256; a=a+1) begin
             stage_8_out_r[a] <= stage_8_out_w[a];
-            stage_7_out_r[a[6:0]] <= stage_7_out_w[a[6:0]];
-            stage_6_out_r[a[5:0]] <= stage_6_out_w[a[5:0]];
-            stage_5_out_r[a[4:0]] <= stage_5_out_w[a[4:0]];
-            stage_4_out_r[a[3:0]] <= stage_4_out_w[a[3:0]];
-            stage_3_out_r[a[2:0]] <= stage_3_out_w[a[2:0]];
-            stage_2_out_r[a[1:0]] <= stage_2_out_w[a[1:0]];
-            stage_1_out_r[a[0]] <= stage_1_out_w[a[0]];
+        end
+        for (a=0; a<128; a=a+1) begin
+            stage_7_out_r[a] <= stage_7_out_w[a];
+        end
+        for (a=0; a<64; a=a+1) begin
+            stage_6_out_r[a] <= stage_6_out_w[a];
+        end
+        for (a=0; a<32; a=a+1) begin
+            stage_5_out_r[a] <= stage_5_out_w[a];
+        end
+        for (a=0; a<16; a=a+1) begin
+            stage_4_out_r[a] <= stage_4_out_w[a];
+        end
+        for (a=0; a<8; a=a+1) begin
+            stage_3_out_r[a] <= stage_3_out_w[a];
+        end
+        for (a=0; a<4; a=a+1) begin
+            stage_2_out_r[a] <= stage_2_out_w[a];
+        end
+        for (a=0; a<2; a=a+1) begin
+            stage_1_out_r[a] <= stage_1_out_w[a];
         end
         stage_8_flag_r <= stage_8_flag_w;
         stage_7_flag_r <= stage_7_flag_w;
