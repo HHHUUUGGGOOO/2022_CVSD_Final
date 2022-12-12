@@ -1,3 +1,4 @@
+set_host_options -max_cores 8
 set hdlin_translate_off_skip_text "TRUE"
 set edifout_netlist_only "TRUE"
 set verilogout_no_tri true
@@ -18,6 +19,7 @@ read_file -format verilog ./flist.v
 current_design $DESIGN
 link
 
+
 create_clock $CLOCK -period $CLOCK_PERIOD
 set_ideal_network -no_propagate $CLOCK
 set_dont_touch_network [get_ports $CLOCK]
@@ -37,7 +39,10 @@ uniquify
 set_fix_multiple_port_nets -all -buffer_constants  [get_designs *]
 set_fix_hold [all_clocks]
 
-compile
+set_max_leakage_power 0
+
+set_clock_gating_style -max_fanout 10 -pos integrated
+compile_ultra 
 
 report_area > Report/$DESIGN\.area
 report_power > Report/$DESIGN\.power
