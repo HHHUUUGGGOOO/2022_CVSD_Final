@@ -1,7 +1,8 @@
 `timescale 1ns/10ps
 `define CYCLE       10.0
 `define HCYCLE      (`CYCLE/2)
-`define MAX_CYCLE   100000000
+// `define MAX_CYCLE   100000000
+`define MAX_CYCLE   1000000000  // for full pattern 
 
 `ifdef GSIM
     `define SDFFILE     "../02_SYN/Netlist/polar_decoder_syn.sdf"   //Modify your sdf file name

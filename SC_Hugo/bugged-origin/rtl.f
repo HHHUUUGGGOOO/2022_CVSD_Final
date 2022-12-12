@@ -15,6 +15,6 @@
 // design files
 // -----------------------------------------------------------------------------
 ./polar_decoder.v
-./ProcessElement.v
-./P_node.v
-./reliability_ROM.v
+./reliability_LUT.v
+./PE.v
+./p_node.v
