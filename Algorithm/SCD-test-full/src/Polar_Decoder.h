@@ -12,12 +12,21 @@ typedef vector<vector<bit>> Vvb;
 class PolarDecoder {
     private:
         int pack_num; 
-        vector<int> N;  // channel length  
-        vector<int> K;  // Transmitted bit length
-        Vvi Reliabilities;  // reliability sequence
-        Vvi FrozenBits;     // frozen bit index list
-        Vvd LLRs;        // Log-likelihood ratio (LLR) list which is decoder input
-        Vvb DecodedMessage; // decoded binary message output list
+        // single 
+        int N;  // channel length  
+        int K;  // Transmitted bit length
+        vector<int> Reliabilities;  // reliability sequence
+        vector<int> FrozenBits;     // frozen bit index list
+        vector<double> LLRs;        // Log-likelihood ratio (LLR) list which is decoder input
+        vector<bit> DecodedMessage; // decoded binary message output list
+        // overall
+        vector<int> Ns;  // channel length  
+        vector<int> Ks;  // Transmitted bit length
+        Vvi Reliabilitiess;  // reliability sequence
+        Vvi FrozenBitss;     // frozen bit index list
+        Vvd LLRss;        // Log-likelihood ratio (LLR) list which is decoder input
+        Vvb DecodedMessages; // decoded binary message output list
+        // common
         string DecodeMethod;    // decode method
         vector<bit> SC(vector<double> llr, int l, int r);    // Successive Cancellation Decoding Method
         bool CheckIsFrozen(int index);     // check if the decoded bit is set to frozen bit

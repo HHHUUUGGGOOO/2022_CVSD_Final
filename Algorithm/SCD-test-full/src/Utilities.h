@@ -4,10 +4,10 @@
 using namespace std;
 
 // Read input LLR list
-void ReadLLR(Vvd& LLRs, vector<int>& N, vector<int>& K, int& pack_num, char* fileName);
+void ReadLLR(Vvd& LLRss, vector<int>& Ns, vector<int>& Ks, int& pack_num, char* fileName);
 
 // Read corresponding reliability sequence
-void ReadReliabilities(Vvi& reliabilities, vector<int> N);
+void ReadReliabilities(Vvi& reliabilitiess);
 
 // SCD f(y1, y2) = sgn(y1)*sgn(y2)*min(abs(y1), abs(y2))
 double f(double y1, double y2);

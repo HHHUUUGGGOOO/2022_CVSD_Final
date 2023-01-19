@@ -38,6 +38,7 @@ parameter S_ReadNK = 2;     // state to read N and K
 parameter S_ReadLLR = 3;    // state to read LLR data
 parameter S_Decode = 4;     // state to Decode
 parameter S_Write = 5;      // state to Write decoded message to DecMem 
+parameter S_Finish = 6;     // state finish 1 pattern
 
 // ---------------------------------------------------------------------------
 // Wires and Registers
@@ -46,7 +47,7 @@ parameter S_Write = 5;      // state to Write decoded message to DecMem
 
 // wire
 // process element connection
-wire [18:0] PE_out [0:255];
+wire [19:0] PE_out [0:63];
 wire [1:0] reliability_N;
 wire [8:0] reliability_index1;
 wire [8:0] reliability_index2;
@@ -85,35 +86,38 @@ reg signed [11:0] LLR_data_r [0:511];
 reg signed [11:0] LLR_data_w [0:511];
 
 // process element connection
-reg [18:0] PE_in [0:511];
+reg [19:0] PE_in [0:127]; 
+// reg_unit = 64
+reg [2:0]  PE_cnt_r, PE_cnt_w; 
+reg [2:0]  PE_cycle_r, PE_cycle_w; // 4, N=512 ; 2, N=256 ; 1, N=128 --> call 4/2/1 times reg_unit
 
 // process element flag
 reg PE_flag_r, PE_flag_w;
 
 // stage buf out
-reg [18:0] stage_8_out_r [0:255];
-reg [18:0] stage_8_out_w [0:255];
+reg [12:0] stage_8_out_r [0:255];
+reg [12:0] stage_8_out_w [0:255];
 reg stage_8_flag_r, stage_8_flag_w;
-reg [18:0] stage_7_out_r [0:127];
-reg [18:0] stage_7_out_w [0:127];
+reg [13:0] stage_7_out_r [0:127];
+reg [13:0] stage_7_out_w [0:127];
 reg stage_7_flag_r, stage_7_flag_w;
-reg [18:0] stage_6_out_r [0:63];
-reg [18:0] stage_6_out_w [0:63];
+reg [14:0] stage_6_out_r [0:63];
+reg [14:0] stage_6_out_w [0:63];
 reg stage_6_flag_r, stage_6_flag_w;
-reg [18:0] stage_5_out_r [0:31];
-reg [18:0] stage_5_out_w [0:31];
+reg [15:0] stage_5_out_r [0:31];
+reg [15:0] stage_5_out_w [0:31];
 reg stage_5_flag_r, stage_5_flag_w;
-reg [18:0] stage_4_out_r [0:15];
-reg [18:0] stage_4_out_w [0:15];
+reg [16:0] stage_4_out_r [0:15];
+reg [16:0] stage_4_out_w [0:15];
 reg stage_4_flag_r, stage_4_flag_w;
-reg [18:0] stage_3_out_r [0:7];
-reg [18:0] stage_3_out_w [0:7];
+reg [17:0] stage_3_out_r [0:7];
+reg [17:0] stage_3_out_w [0:7];
 reg stage_3_flag_r, stage_3_flag_w;
 reg [18:0] stage_2_out_r [0:3];
 reg [18:0] stage_2_out_w [0:3];
 reg stage_2_flag_r, stage_2_flag_w;
-reg [18:0] stage_1_out_r [0:1];
-reg [18:0] stage_1_out_w [0:1];
+reg [19:0] stage_1_out_r [0:1];
+reg [19:0] stage_1_out_w [0:1];
 reg stage_1_flag_r, stage_1_flag_w;
 
 // stage u
@@ -160,8 +164,8 @@ assign PE_u = (stage_r == 8) ? stage_8_u_r : (stage_r == 7) ? {128'b0, stage_7_u
 
 genvar j;
 generate
-    for (j=0; j<256; j=j+1) begin : PE_array
-        processElement PE(.llr_1(PE_in[2*j]), .llr_2(PE_in[(2*j)+1]), .control(PE_flag_r), .u(PE_u[j]), .llr_out(PE_out[j]));
+    for (j=0; j<64; j=j+1) begin : PE_array
+        processElement PE(.llr_1(PE_in[2*j]), .llr_2(PE_in[(2*j)+1]), .control(PE_flag_r), .u(PE_u[(PE_cnt_r << 6) + j]), .llr_out(PE_out[j]));
     end
 endgenerate
 
@@ -191,15 +195,20 @@ always @(*) begin
             end
         end
         S_Packet: begin
-            packet_num_w = rdata[6:0];
-            next_state = S_ReadNK;
+            if (module_en) begin     
+                packet_num_w = rdata[6:0];  
+                next_state = S_ReadNK;
+            end
+            else begin
+                next_state = S_Packet;
+            end
         end
         S_ReadNK: begin
             next_state = S_ReadLLR;
         end
-        S_ReadLLR: begin
+        S_ReadLLR: begin 
             if (N_r[9] == 1) begin    // N = 512
-                next_state = (count == 31) ? S_Decode : S_ReadLLR;
+                next_state = (count == 31) ? S_Decode : S_ReadLLR; 
             end
             else if (N_r[8] == 1) begin   // N = 256
                 next_state = (count == 15) ? S_Decode : S_ReadLLR;
@@ -213,9 +222,12 @@ always @(*) begin
             packet_num_w = (decode_done == 1) ? packet_num_r - 1 : packet_num_r;
         end
         S_Write: begin
-            next_state = (packet_num_r == 0) ? S_Packet : S_ReadNK;
             proc_done_w = (packet_num_r == 0) ? 1 : 0;
-            waddr_w = waddr_r + 1;
+            next_state = (packet_num_r == 0) ? S_Finish : S_ReadNK;
+            waddr_w = (packet_num_r == 0) ? 0 : waddr_r + 1;
+        end
+        S_Finish : begin
+            next_state = S_Idle;
         end
         default: begin
             next_state = S_Idle;
@@ -252,6 +264,8 @@ integer k;
 // recursive controller & partial sum generator
 always @(*) begin
     PE_flag_w = 0;
+    PE_cycle_w = PE_cycle_r;
+    PE_cnt_w = PE_cnt_r; 
     stage_w = stage_r;
     stage_8_flag_w = 0;
     stage_7_flag_w = 0;
@@ -272,9 +286,11 @@ always @(*) begin
     decode_done = 0;
     if (state == S_ReadLLR) begin
         PE_flag_w = 0;
+        PE_cnt_w = 0;
         stage_w = (N_r[9] == 1) ? 8 : (N_r[8] == 1) ? 7 : 6;
+        PE_cycle_w = (N_r[9] == 1) ? 4 : (N_r[8] == 1) ? 2 : 1;
         if (N_r[8] == 1) begin  // N = 256
-            stage_8_flag_w = 1;
+            stage_8_flag_w = 1; 
         end
         else if (N_r[7] == 1) begin // N = 128
             stage_8_flag_w = 1;
@@ -283,7 +299,9 @@ always @(*) begin
     end
     else if (state == S_Decode) begin
         PE_flag_w = (stage_r == 0) ? 1 : 0;
-        stage_w = (stage_r == 0) ? stage_r : stage_r - 1;
+        stage_w = ((stage_r == 0) || (PE_cnt_r != (PE_cycle_r - 1))) ? stage_r : (stage_r - 1); 
+        PE_cnt_w = (PE_cnt_r == (PE_cycle_r - 1)) ? 0 : (PE_cnt_r + 1); 
+        PE_cycle_w = (stage_w == 8) ? 4 : (stage_w == 7) ? 2 : 1; 
         stage_8_flag_w = stage_8_flag_r;
         stage_7_flag_w = stage_7_flag_r;
         stage_6_flag_w = stage_6_flag_r;
@@ -495,8 +513,8 @@ end
 integer a;
 integer q;
 // stage buf out & PE_in
-always @(*) begin
-    for (a=0; a<512; a=a+1) begin
+always @(*) begin  
+    for (a=0; a<128; a=a+1) begin
         PE_in[a] = 0;
     end
     for (a=0; a<256; a=a+1) begin
@@ -525,72 +543,72 @@ always @(*) begin
     end
     if (state == S_Decode) begin
         if (stage_r == 8) begin
-            for (a=0; a<256; a=a+1) begin
-                PE_in[2*a] = { {7{LLR_data_r[a][11]}} , LLR_data_r[a]};
-                PE_in[(2*a)+1] = { {7{LLR_data_r[a+256][11]}} , LLR_data_r[a+256]};
+            for (a=0; a<64; a=a+1) begin
+                PE_in[2*a] = { {8{LLR_data_r[(PE_cnt_r << 6)+a][11]}} , LLR_data_r[(PE_cnt_r << 6)+a]}; // PE_cnt_r * 32 == PE_cnt_r << 5
+                PE_in[(2*a)+1] = { {8{LLR_data_r[((PE_cnt_r << 6)+a)+256][11]}} , LLR_data_r[((PE_cnt_r << 6)+a)+256]};
             end
-            for (a=0; a<256; a=a+1) begin
-                stage_8_out_w[a] = PE_out[a];
+            for (a=0; a<64; a=a+1) begin
+                stage_8_out_w[(PE_cnt_r << 6)+a] = PE_out[a][12:0];
             end
         end
         else if (stage_r == 7) begin
-            for (a=0; a<128; a=a+1) begin
-                PE_in[2*a] = (N_r[8] == 1) ? { {7{LLR_data_r[a][11]}} , LLR_data_r[a]} : stage_8_out_r[a];
-                PE_in[(2*a)+1] = (N_r[8] == 1) ? { {7{LLR_data_r[a+128][11]}} , LLR_data_r[a+128]} : stage_8_out_r[a+128];
+            for (a=0; a<64; a=a+1) begin
+                PE_in[2*a] = (N_r[8] == 1) ? { {8{LLR_data_r[(PE_cnt_r << 6)+a][11]}} , LLR_data_r[(PE_cnt_r << 6)+a] } : { {7{stage_8_out_r[(PE_cnt_r << 6)+a][12]}} , stage_8_out_r[(PE_cnt_r << 6)+a] };
+                PE_in[(2*a)+1] = (N_r[8] == 1) ? { {8{LLR_data_r[((PE_cnt_r << 6)+a)+128][11]}} , LLR_data_r[((PE_cnt_r << 6)+a)+128]} : { {7{stage_8_out_r[((PE_cnt_r << 6)+a)+128][12]}} , stage_8_out_r[((PE_cnt_r << 6)+a)+128] };
             end
-            for (a=0; a<128; a=a+1) begin
-                stage_7_out_w[a] = PE_out[a];
+            for (a=0; a<64; a=a+1) begin
+                stage_7_out_w[(PE_cnt_r << 6)+a] = PE_out[a][13:0];
             end
         end
-        else if (stage_r == 6) begin
+        else if (stage_r == 6) begin 
             for (a=0; a<64; a=a+1) begin
-                PE_in[2*a] = (N_r[7] == 1) ? { {7{LLR_data_r[a][11]}} , LLR_data_r[a]} : stage_7_out_r[a];
-                PE_in[(2*a)+1] = (N_r[7] == 1) ? { {7{LLR_data_r[a+64][11]}} , LLR_data_r[a+64]} : stage_7_out_r[a+64];
+                PE_in[2*a] = (N_r[7] == 1) ? { {8{LLR_data_r[a][11]}} , LLR_data_r[a] } : { {6{stage_7_out_r[a][13]}} , stage_7_out_r[a] };
+                PE_in[(2*a)+1] = (N_r[7] == 1) ? { {8{LLR_data_r[a+64][11]}} , LLR_data_r[a+64] } : { {6{stage_7_out_r[a+64][13]}} , stage_7_out_r[a+64] };
             end
             for (a=0; a<64; a=a+1) begin
-                stage_6_out_w[a] = PE_out[a];
+                stage_6_out_w[(PE_cnt_r << 6)+a] = PE_out[a][14:0];
             end
         end
         else if (stage_r == 5) begin
             for (a=0; a<32; a=a+1) begin
-                PE_in[2*a] = stage_6_out_r[a];
-                PE_in[(2*a)+1] = stage_6_out_r[a+32];
+                PE_in[2*a] = { {5{stage_6_out_r[a][14]}} , stage_6_out_r[a] };
+                PE_in[(2*a)+1] = { {5{stage_6_out_r[a+32][14]}} , stage_6_out_r[a+32] };
             end
             for (a=0; a<32; a=a+1) begin
-                stage_5_out_w[a] = PE_out[a];
+                stage_5_out_w[a] = PE_out[a][15:0];
             end
         end
         else if (stage_r == 4) begin
             for (a=0; a<16; a=a+1) begin
-                PE_in[2*a] = stage_5_out_r[a];
-                PE_in[(2*a)+1] = stage_5_out_r[a+16];
+                PE_in[2*a] = { {4{stage_5_out_r[a][15]}} , stage_5_out_r[a] };
+                PE_in[(2*a)+1] = { {4{stage_5_out_r[a+16][15]}} , stage_5_out_r[a+16] };
             end
             for (a=0; a<16; a=a+1) begin
-                stage_4_out_w[a] = PE_out[a];
+                stage_4_out_w[a] = PE_out[a][16:0];
             end
         end
         else if (stage_r == 3) begin
             for (a=0; a<8; a=a+1) begin
-                PE_in[2*a] = stage_4_out_r[a];
-                PE_in[(2*a)+1] = stage_4_out_r[a+8];
+                PE_in[2*a] = { {3{stage_4_out_r[a][16]}} , stage_4_out_r[a] };
+                PE_in[(2*a)+1] = { {3{stage_4_out_r[a+8][16]}} , stage_4_out_r[a+8] };
             end
             for (a=0; a<8; a=a+1) begin
-                stage_3_out_w[a] = PE_out[a];
+                stage_3_out_w[a] = PE_out[a][17:0];
             end
         end
         else if (stage_r == 2) begin
             for (a=0; a<4; a=a+1) begin
-                PE_in[2*a] = stage_3_out_r[a];
-                PE_in[(2*a)+1] = stage_3_out_r[a+4];
+                PE_in[2*a] = { {2{stage_3_out_r[a][17]}} , stage_3_out_r[a] };
+                PE_in[(2*a)+1] = { {2{stage_3_out_r[a+4][17]}} , stage_3_out_r[a+4] };
             end
             for (a=0; a<4; a=a+1) begin
-                stage_2_out_w[a] = PE_out[a];
+                stage_2_out_w[a] = PE_out[a][18:0];
             end
         end
         else if (stage_r == 1) begin
             for (a=0; a<2; a=a+1) begin
-                PE_in[2*a] = stage_2_out_r[a];
-                PE_in[(2*a)+1] = stage_2_out_r[a+2];
+                PE_in[2*a] = { stage_2_out_r[a][18] , stage_2_out_r[a] };
+                PE_in[(2*a)+1] = { stage_2_out_r[a+2][18] , stage_2_out_r[a+2] };
             end
             for (a=0; a<2; a=a+1) begin
                 stage_1_out_w[a] = PE_out[a];
@@ -617,6 +635,7 @@ end
 // output count
 always @(*) begin
     if (state == S_Decode) begin
+        wdata_w = wdata_r;
         if (stage_r == 0) begin
             if (isFrozen1 == 1 && isFrozen2 == 1) begin
                 output_count_w = output_count_r;
@@ -656,9 +675,13 @@ end
 // Counter
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        count <= 0;
+        count <= 0; 
+        PE_cnt_r <= 0; 
+        PE_cycle_r <= 0; 
     end
     else begin
+        PE_cnt_r <= PE_cnt_w; 
+        PE_cycle_r <= PE_cycle_w;
         case (state)
             S_ReadNK: begin
                 count <= 0;
@@ -714,7 +737,7 @@ always @(posedge clk or negedge rst_n) begin
                 raddr_reg <= (module_en == 1) ? raddr_reg + 1 : raddr_reg;
             end
             S_Packet: begin
-                raddr_reg <= raddr_reg + 1;
+                raddr_reg <= (module_en == 1) ? raddr_reg + 1 : raddr_reg;
             end
             S_ReadNK: begin
                 raddr_reg <= raddr_reg + 1;
@@ -731,7 +754,10 @@ always @(posedge clk or negedge rst_n) begin
                 end
             end
             S_Write: begin
-                raddr_reg <= raddr_reg + 1;
+                raddr_reg <= (packet_num_r == 0) ? 0 : raddr_reg + 1;
+            end
+            S_Finish: begin
+                raddr_reg <= raddr_reg;
             end
             default: begin
                 raddr_reg <= raddr_reg;
@@ -778,13 +804,27 @@ always @(posedge clk or negedge rst_n) begin
         output_count_r <= 0;
         for (a=0; a<256; a=a+1) begin
             stage_8_out_r[a] <= 0;
-            stage_7_out_r[a[6:0]] <= 0;
-            stage_6_out_r[a[5:0]] <= 0;
-            stage_5_out_r[a[4:0]] <= 0;
-            stage_4_out_r[a[3:0]] <= 0;
-            stage_3_out_r[a[2:0]] <= 0;
-            stage_2_out_r[a[1:0]] <= 0;
-            stage_1_out_r[a[0]] <= 0;
+        end
+        for (a=0; a<128; a=a+1) begin
+            stage_7_out_r[a] <= 0;
+        end
+        for (a=0; a<64; a=a+1) begin
+            stage_6_out_r[a] <= 0;
+        end
+        for (a=0; a<32; a=a+1) begin
+            stage_5_out_r[a] <= 0;
+        end
+        for (a=0; a<16; a=a+1) begin
+            stage_4_out_r[a] <= 0;
+        end
+        for (a=0; a<8; a=a+1) begin
+            stage_3_out_r[a] <= 0;
+        end
+        for (a=0; a<4; a=a+1) begin
+            stage_2_out_r[a] <= 0;
+        end
+        for (a=0; a<2; a=a+1) begin
+            stage_1_out_r[a] <= 0;
         end
         stage_8_flag_r <= 0;
         stage_7_flag_r <= 0;
@@ -810,13 +850,27 @@ always @(posedge clk or negedge rst_n) begin
         output_count_r <= output_count_w;
         for (a=0; a<256; a=a+1) begin
             stage_8_out_r[a] <= stage_8_out_w[a];
-            stage_7_out_r[a[6:0]] <= stage_7_out_w[a[6:0]];
-            stage_6_out_r[a[5:0]] <= stage_6_out_w[a[5:0]];
-            stage_5_out_r[a[4:0]] <= stage_5_out_w[a[4:0]];
-            stage_4_out_r[a[3:0]] <= stage_4_out_w[a[3:0]];
-            stage_3_out_r[a[2:0]] <= stage_3_out_w[a[2:0]];
-            stage_2_out_r[a[1:0]] <= stage_2_out_w[a[1:0]];
-            stage_1_out_r[a[0]] <= stage_1_out_w[a[0]];
+        end
+        for (a=0; a<128; a=a+1) begin
+            stage_7_out_r[a] <= stage_7_out_w[a];
+        end
+        for (a=0; a<64; a=a+1) begin
+            stage_6_out_r[a] <= stage_6_out_w[a];
+        end
+        for (a=0; a<32; a=a+1) begin
+            stage_5_out_r[a] <= stage_5_out_w[a];
+        end
+        for (a=0; a<16; a=a+1) begin
+            stage_4_out_r[a] <= stage_4_out_w[a];
+        end
+        for (a=0; a<8; a=a+1) begin
+            stage_3_out_r[a] <= stage_3_out_w[a];
+        end
+        for (a=0; a<4; a=a+1) begin
+            stage_2_out_r[a] <= stage_2_out_w[a];
+        end
+        for (a=0; a<2; a=a+1) begin
+            stage_1_out_r[a] <= stage_1_out_w[a];
         end
         stage_8_flag_r <= stage_8_flag_w;
         stage_7_flag_r <= stage_7_flag_w;

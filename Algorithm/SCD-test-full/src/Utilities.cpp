@@ -11,7 +11,7 @@
 using namespace std;
 
 // Read input LLR list
-void ReadLLR(Vvd& LLRs, vector<int>& N, vector<int>& K, int& pack_num, char* fileName) {
+void ReadLLR(Vvd& LLRss, vector<int>& Ns, vector<int>& Ks, int& pack_num, char* fileName) {
     fstream fin;
     fin.open(fileName, ios::in);
     if (!fin) {
@@ -34,8 +34,8 @@ void ReadLLR(Vvd& LLRs, vector<int>& N, vector<int>& K, int& pack_num, char* fil
         // read N, K 
         int K_tmp, N_tmp; 
         fin >> K_tmp >> N_tmp; 
-        K.push_back(K_tmp); 
-        N.push_back(N_tmp); 
+        Ks.push_back(K_tmp); 
+        Ns.push_back(N_tmp); 
 
         // read LLR 
         int it = 0;
@@ -70,6 +70,7 @@ void ReadLLR(Vvd& LLRs, vector<int>& N, vector<int>& K, int& pack_num, char* fil
             }
             // done 
             if (row == 32) { 
+                LLRss.push_back(one_pat_llrs); 
                 next = true; 
                 row = 0; 
             }
@@ -80,31 +81,37 @@ void ReadLLR(Vvd& LLRs, vector<int>& N, vector<int>& K, int& pack_num, char* fil
 }
 
 // Read corresponding reliability sequence
-void ReadReliabilities(Vvi& reliabilities, vector<int> N) {
-    fstream fin;
-    stringstream ss_convert;
-    stringstream ss;
-    ss_convert << "./data/reliability_" << N << ".txt";
-    string fileString = ss_convert.str();
-    const char* fileName = fileString.c_str();
-    
-    fin.open(fileName, ios::in);
-    if (!fin) {
-        cerr << endl;
-        cerr << fileName << " can not be opened! " << endl;
-        throw;
-    }
+void ReadReliabilities(Vvi& reliabilitiess) {
+    vector<string> files = ["./data/reliability_128.txt", "./data/reliability_256.txt", "./data/reliability_512.txt"]; 
+    vector<int> one_pat_reliability; 
+    for (int i = 0 ; i < 3 ; ++i) {
+        fstream fin;
+        stringstream ss_convert;
+        stringstream ss;
+        ss_convert << files[i];
+        string fileString = ss_convert.str();
+        const char* fileName = fileString.c_str();
+        
+        fin.open(fileName, ios::in);
+        if (!fin) {
+            cerr << endl;
+            cerr << fileName << " can not be opened! " << endl;
+            throw;
+        }
 
-    while(!fin.eof()) {
-        string s;
-        int index;
-        fin >> s;
-        ss << s;
-        ss >> index;
-        reliabilities.push_back(index);
-        ss.str("");
-        ss.clear();
+        while(!fin.eof()) {
+            string s;
+            int index;
+            fin >> s;
+            ss << s;
+            ss >> index;
+            one_pat_reliability.push_back(index);
+            ss.str("");
+            ss.clear();
+        }
+        reliabilitiess.push_back(one_pat_reliability); 
     }
+    
     return;
 }
 
